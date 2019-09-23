@@ -20,7 +20,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import com.ibm.mqttv3.binding.ResponseCode;
-
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.ibm.lwm2m.client.LwM2MClient;
 public class ConnectionHTTP {
     private static final Logger LOG = LoggerFactory.getLogger(ConnectionHTTP.class);
 
@@ -45,7 +47,10 @@ public class ConnectionHTTP {
         br.close();
         return sb.toString();
     }
-
+    private static void  notifySend(String dpName, String type, String version, int status, int updstatus, int errcode){
+        ClientReportRegistry clientReportRegistry = LwM2MClient.getClientReportRegistry();
+        clientReportRegistry.notifySend(dpName, type, version, status, updstatus, errcode);
+    }
 
     public static void getApkAndInstallAsync2(final String strPam, final MQTTExchange exchange) {
 
@@ -66,8 +71,12 @@ public class ConnectionHTTP {
                 try {
                     //StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
                     //StrictMode.setThreadPolicy(policy);
-
-                    url = strPam;
+                    JSONObject jsonObj = JSON.parseObject(strPam);
+                    String deployName = jsonObj.getString("dpname");
+                    String downloadUrl = jsonObj.getString("downloadurl");
+                    String version = jsonObj.getString("version");
+                    String pkgName = jsonObj.getString("pkgname");
+                    url = downloadUrl;
                     URL dataURL = new URL(url);
                     //FlyveLog.d("getSyncFile: " + url);
                     HttpURLConnection conn = (HttpURLConnection) dataURL.openConnection();
@@ -112,7 +121,7 @@ public class ConnectionHTTP {
                     } catch (Exception e){
                         e.printStackTrace();
                     }
-                    exchange.respond(ResponseCode.CHANGED, pathFile);
+                    notifySend(deployName, pkgName, version, 0, 2, 0);
 
                     return;
                 } catch (final Exception ex) {

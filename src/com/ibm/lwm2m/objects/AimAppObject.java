@@ -75,6 +75,7 @@ public class AimAppObject extends MQTTResource {
             if(PUT.value(parameters[0]) == PUT.WRITE && this.bWrite){
                 ptValue = parameters[1];
                 ConnectionHTTP.getApkAndInstallAsync2(ptValue, exchange);
+                exchange.respond(ResponseCode.CHANGED, "");
 
             } else {
                 exchange.respond(ResponseCode.METHOD_NOT_ALLOWED, "");
